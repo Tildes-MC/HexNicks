@@ -115,3 +115,10 @@ run/
 # Javadoc folder
 javadoc/
 /docs/.docusaurus/
+
+/docs/node_modules/
+
+.project
+.factorypath
+.classpath
+.settings/
