@@ -55,9 +55,7 @@ public class PlayerChat implements Listener {
 
       Component chat = formatChat(
           event.getPlayer(),
-          PlainTextComponentSerializer
-              .plainText()
-              .serialize(event.message())
+          event.message()
       );
 
       if (HexNicks.config().NO_CHAT_REPORTS) {
@@ -78,7 +76,7 @@ public class PlayerChat implements Listener {
    * @param message the message
    * @return formatted chat
    */
-  private @NotNull Component formatChat(final @NotNull Player source, final @NotNull String message) {
+  private @NotNull Component formatChat(final @NotNull Player source, final @NotNull Component message) {
     final MiniMessageWrapper miniMessageWrapper = MiniMessageWrapper.builder()
         .advancedTransformations(source.hasPermission("hexnicks.chat.advanced"))
         .gradients(source.hasPermission("hexnicks.color.gradient"))
@@ -120,7 +118,7 @@ public class PlayerChat implements Listener {
             TextReplacementConfig
                 .builder()
                 .matchLiteral("{message}")
-                .replacement(miniMessageWrapper.mmParse(message))
+                .replacement(message)
                 .build()
         );
 
