@@ -28,7 +28,7 @@ public class PlayerChat implements Listener {
     if (HexNicks.config().CHAT_FORMATTER) {
       HexNicks.logging().debug("Original message: " + PlainTextComponentSerializer.plainText().serialize(event.message()));
       event.renderer((source, sourceDisplayName, message, viewer) ->
-              formatChat(event.getPlayer(), PlainTextComponentSerializer.plainText().serialize(event.message()))
+              formatChat(event.getPlayer(), event.message())
       );
     }
   }
@@ -40,7 +40,7 @@ public class PlayerChat implements Listener {
    * @param message the message
    * @return formatted chat
    */
-  private @NotNull Component formatChat(final @NotNull Player source, final @NotNull String message) {
+  private @NotNull Component formatChat(final @NotNull Player source, final @NotNull Component message) {
     final MiniMessageWrapper miniMessageWrapper = MiniMessageWrapper.builder()
         .advancedTransformations(source.hasPermission("hexnicks.chat.advanced"))
         .gradients(source.hasPermission("hexnicks.color.gradient"))
@@ -65,7 +65,7 @@ public class PlayerChat implements Listener {
             )
             // Replace message placeholder with the formatted message from the event
             .replaceText(TextReplacementConfig.builder().matchLiteral("{message}")
-                    .replacement(miniMessageWrapper.mmParse(message)).build()
+                    .replacement(message).build()
             );
     HexNicks.logging().debug("Formatted message: " + PlainTextComponentSerializer.plainText().serialize(ret));
     return ret;
