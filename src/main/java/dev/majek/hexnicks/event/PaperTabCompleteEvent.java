@@ -25,38 +25,71 @@ package dev.majek.hexnicks.event;
 
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import dev.majek.hexnicks.HexNicks;
-import java.util.stream.Collectors;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Handles tab completion for <code>/realname</code>.
+ * Handles tab completion for <code>/realname</code> and chat tab completions.
  */
 public class PaperTabCompleteEvent implements Listener {
 
   @EventHandler
   public void onTabComplete(AsyncTabCompleteEvent event) {
     String[] args = event.getBuffer().split(" ");
-    if (!event.isCommand()) {
-      return;
-    }
-    if (args[0].contains("realname")) {
-      nickCompletions(event, args);
+    String prefix = args.length > 0 ? args[args.length - 1].toLowerCase() : "";
+
+    if (event.isCommand()) {
+      if (args[0].contains("realname") && args.length > 1) {
+        realnameCompletions(event, prefix);
+      }
+    } else {
+      chatCompletions(event, prefix);
     }
   }
 
-  public void nickCompletions(@NotNull AsyncTabCompleteEvent event, @NotNull String[] args) {
-    if (args.length > 1) {
-      event.completions(HexNicks.core().getNickMap().values().stream().filter(nickname ->
-          PlainTextComponentSerializer.plainText().serialize(nickname).startsWith(args[1])).map(nickname ->
-          AsyncTabCompleteEvent.Completion.completion(PlainTextComponentSerializer.plainText()
-              .serialize(nickname), nickname)).collect(Collectors.toList()));
-    } else {
-      event.completions(HexNicks.core().getNickMap().values().stream().map(nickname -> AsyncTabCompleteEvent
-              .Completion.completion(PlainTextComponentSerializer.plainText().serialize(nickname), nickname))
-          .collect(Collectors.toList()));
+  private void realnameCompletions(@NotNull AsyncTabCompleteEvent event, @NotNull String prefix) {
+    List<AsyncTabCompleteEvent.Completion> completions = new ArrayList<>();
+    for (Component nickname : HexNicks.core().getNickMap().values()) {
+      String textName = PlainTextComponentSerializer.plainText().serialize(nickname);
+      if (!textName.toLowerCase().startsWith(prefix)) {
+        continue;
+      }
+
+      completions.add(AsyncTabCompleteEvent.Completion.completion(textName, nickname));
     }
+
+    event.completions(completions);
+  }
+
+  private void chatCompletions(@NotNull AsyncTabCompleteEvent event, @NotNull String prefix) {
+    Map<UUID, Component> nickMap = HexNicks.core().getNickMap();
+
+    List<AsyncTabCompleteEvent.Completion> completions = new ArrayList<>();
+    for (Player player : Bukkit.getOnlinePlayers()) {
+      if (!nickMap.containsKey(player.getUniqueId())) {
+        continue;
+      }
+
+      Component nickname = nickMap.get(player.getUniqueId());
+      String textName = PlainTextComponentSerializer.plainText().serialize(nickname);
+      if (!textName.toLowerCase().startsWith(prefix)) {
+        continue;
+      }
+
+      completions.add(AsyncTabCompleteEvent.Completion.completion(textName, nickname));
+    }
+
+    event.completions().addAll(completions);
   }
 }
